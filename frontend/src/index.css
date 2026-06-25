@@ -1,0 +1,8 @@
+@import "./styles/01-variables.css";
+@import "./styles/99-legacy.css";
+
+@import "./styles/02-base.css";
+@import "./styles/03-layout.css";
+@import "./styles/04-components.css";
+@import "./styles/05-reviews.css";
+@import "./styles/06-groups.css";
