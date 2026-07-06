@@ -9,6 +9,14 @@ export const API_BASE_URL =
     : "https://sellerhub-backend.onrender.com");
 
 export function getUploadUrl(filePath) {
+  if (!filePath) {
+    return "";
+  }
+
+  if (filePath.startsWith("http")) {
+    return filePath;
+  }
+
   return `${API_BASE_URL}/uploads/${filePath}`;
 }
 

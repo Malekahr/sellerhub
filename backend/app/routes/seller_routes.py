@@ -1,6 +1,9 @@
-from pathlib import Path
 from uuid import uuid4
-from app.utils.file_utils import delete_uploaded_file
+
+from app.utils.file_utils import (
+    delete_uploaded_file,
+    upload_file_to_supabase_storage,
+)
 from app.utils.seller_permission_utils import (
     get_owned_seller_image_or_404,
     get_owned_seller_product_or_404,
@@ -33,7 +36,7 @@ router = APIRouter(
     tags=["Seller Reviews"]
 )
 
-UPLOAD_DIR = Path("app/uploads/seller_images")
+
 
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg": ".jpg",
@@ -327,16 +330,15 @@ async def upload_product_image(
     file_extension = ALLOWED_IMAGE_TYPES[file.content_type]
     safe_filename = f"{uuid4().hex}{file_extension}"
 
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-    file_path = UPLOAD_DIR / safe_filename
-
-    with open(file_path, "wb") as image_file:
-        image_file.write(file_bytes)
+    public_image_url = upload_file_to_supabase_storage(
+        file_bytes=file_bytes,
+        filename=safe_filename,
+        content_type=file.content_type
+    )
 
     db_image = SellerProductImage(
         product_id=product.id,
-        file_path=f"seller_images/{safe_filename}",
+        file_path=public_image_url,
         file_type=file.content_type,
         file_size=len(file_bytes),
         image_label=image_label.strip() if image_label else None
