@@ -1,6 +1,41 @@
+import pytest
+
 from app.models.user import User
-from app.routes import seller_routes
-from app.utils import file_utils
+from app.routes import admin_routes, seller_routes
+
+
+@pytest.fixture(autouse=True)
+def mock_supabase_storage(monkeypatch):
+    def fake_upload_file_to_supabase_storage(
+        file_bytes: bytes,
+        filename: str,
+        content_type: str
+    ) -> str:
+        return (
+            "https://example.supabase.co/storage/v1/object/public/"
+            f"seller-hub-images/seller_images/{filename}"
+        )
+
+    def fake_delete_uploaded_file(file_path: str) -> str | None:
+        return file_path
+
+    monkeypatch.setattr(
+        seller_routes,
+        "upload_file_to_supabase_storage",
+        fake_upload_file_to_supabase_storage
+    )
+
+    monkeypatch.setattr(
+        seller_routes,
+        "delete_uploaded_file",
+        fake_delete_uploaded_file
+    )
+
+    monkeypatch.setattr(
+        admin_routes,
+        "delete_uploaded_file",
+        fake_delete_uploaded_file
+    )
 
 
 def register_user(client, username: str, email: str):
@@ -46,16 +81,6 @@ def register_and_login_admin(client, db_session, username: str, email: str) -> s
     return login_user(client, email)
 
 
-def use_temp_upload_dir(monkeypatch, tmp_path):
-    temp_upload_base = tmp_path / "uploads"
-    temp_seller_images = temp_upload_base / "seller_images"
-
-    monkeypatch.setattr(file_utils, "UPLOAD_BASE_DIR", temp_upload_base)
-    monkeypatch.setattr(seller_routes, "UPLOAD_DIR", temp_seller_images)
-
-    return temp_upload_base
-
-
 def create_test_review(client, token: str):
     return client.post(
         "/seller-reviews",
@@ -68,12 +93,12 @@ def create_test_review(client, token: str):
             "product_type": "sneakers",
             "quality_rating": 4,
             "price_rating": 5,
-            "description": "Review voor image tests.",
+            "description": "Review for image tests.",
             "products": [
                 {
                     "product_name": "Nike Image Test",
                     "purchase_date": "2026-06-19",
-                    "short_description": "Product voor image test."
+                    "short_description": "Product for image test."
                 }
             ]
         }
@@ -95,9 +120,7 @@ def upload_test_image(client, token: str, product_id: int):
     )
 
 
-def test_upload_product_image_success(client, monkeypatch, tmp_path):
-    use_temp_upload_dir(monkeypatch, tmp_path)
-
+def test_upload_product_image_success(client):
     token = register_and_login(
         client,
         username="testuser",
@@ -116,13 +139,13 @@ def test_upload_product_image_success(client, monkeypatch, tmp_path):
     assert data["file_type"] == "image/jpeg"
     assert data["file_size"] == len(b"fake image content")
     assert data["image_label"] == "front"
-    assert data["file_path"].startswith("seller_images/")
+    assert data["file_path"].startswith(
+        "https://example.supabase.co/storage/v1/object/public/"
+    )
     assert data["file_path"].endswith(".jpg")
 
 
-def test_upload_product_image_requires_owner(client, monkeypatch, tmp_path):
-    use_temp_upload_dir(monkeypatch, tmp_path)
-
+def test_upload_product_image_requires_owner(client):
     owner_token = register_and_login(
         client,
         username="owneruser",
@@ -143,9 +166,7 @@ def test_upload_product_image_requires_owner(client, monkeypatch, tmp_path):
     assert response.status_code == 404
 
 
-def test_upload_product_image_rejects_invalid_file_type(client, monkeypatch, tmp_path):
-    use_temp_upload_dir(monkeypatch, tmp_path)
-
+def test_upload_product_image_rejects_invalid_file_type(client):
     token = register_and_login(
         client,
         username="testuser",
@@ -171,9 +192,7 @@ def test_upload_product_image_rejects_invalid_file_type(client, monkeypatch, tmp
     assert response.status_code == 400
 
 
-def test_delete_own_product_image_success(client, monkeypatch, tmp_path):
-    use_temp_upload_dir(monkeypatch, tmp_path)
-
+def test_delete_own_product_image_success(client):
     token = register_and_login(
         client,
         username="testuser",
@@ -208,9 +227,7 @@ def test_delete_own_product_image_success(client, monkeypatch, tmp_path):
     assert detail_response.json()["products"][0]["images"] == []
 
 
-def test_other_user_cannot_delete_product_image(client, monkeypatch, tmp_path):
-    use_temp_upload_dir(monkeypatch, tmp_path)
-
+def test_other_user_cannot_delete_product_image(client):
     owner_token = register_and_login(
         client,
         username="owneruser",
@@ -239,9 +256,7 @@ def test_other_user_cannot_delete_product_image(client, monkeypatch, tmp_path):
     assert delete_response.status_code == 404
 
 
-def test_admin_can_delete_product_image(client, db_session, monkeypatch, tmp_path):
-    use_temp_upload_dir(monkeypatch, tmp_path)
-
+def test_admin_can_delete_product_image(client, db_session):
     owner_token = register_and_login(
         client,
         username="owneruser",
@@ -283,9 +298,7 @@ def test_admin_can_delete_product_image(client, db_session, monkeypatch, tmp_pat
     assert detail_response.json()["products"][0]["images"] == []
 
 
-def test_admin_can_delete_product_with_images(client, db_session, monkeypatch, tmp_path):
-    use_temp_upload_dir(monkeypatch, tmp_path)
-
+def test_admin_can_delete_product_with_images(client, db_session):
     owner_token = register_and_login(
         client,
         username="owneruser",

@@ -16,6 +16,7 @@ function CreateSellerReviewPage() {
     product_name: "",
     purchase_date: "",
     short_description: "",
+    product_link: "",
   });
 
   const [error, setError] = useState("");
@@ -49,6 +50,7 @@ function CreateSellerReviewPage() {
             product_name: formData.product_name.trim(),
             purchase_date: formData.purchase_date || null,
             short_description: formData.short_description.trim(),
+            product_link: formData.product_link.trim() || null,
           },
         ],
       });
@@ -177,6 +179,19 @@ function CreateSellerReviewPage() {
                 type="date"
                 value={formData.purchase_date}
                 onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="product_link">Product link</label>
+              <input
+                id="product_link"
+                name="product_link"
+                type="url"
+                value={formData.product_link}
+                onChange={handleChange}
+                placeholder="Weidian, Taobao, Tmall, 1688 or agent product link"
+                maxLength={2000}
               />
             </div>
           </div>

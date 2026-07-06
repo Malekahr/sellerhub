@@ -8,11 +8,25 @@ class SellerReviewProductCreate(BaseModel):
     product_name: str = Field(min_length=2, max_length=150)
     purchase_date: Optional[date] = None
     short_description: Optional[str] = Field(default=None, max_length=1000)
+    product_link: Optional[str] = Field(default=None, max_length=2000)
 
     @field_validator("product_name")
     @classmethod
     def clean_product_name(cls, value: str):
         return value.strip()
+
+    @field_validator("product_link")
+    @classmethod
+    def clean_product_link(cls, value: Optional[str]):
+        if value is None:
+            return value
+
+        cleaned_value = value.strip()
+
+        if not cleaned_value:
+            return None
+
+        return cleaned_value
 
 
 class SellerReviewCreate(BaseModel):
@@ -59,6 +73,7 @@ class SellerReviewProductUpdate(BaseModel):
     product_name: Optional[str] = Field(default=None, min_length=2, max_length=150)
     purchase_date: Optional[date] = None
     short_description: Optional[str] = Field(default=None, max_length=1000)
+    product_link: Optional[str] = Field(default=None, max_length=2000)
 
     @field_validator("product_name")
     @classmethod
@@ -67,6 +82,20 @@ class SellerReviewProductUpdate(BaseModel):
             return value
 
         return value.strip()
+
+    @field_validator("product_link")
+    @classmethod
+    def clean_optional_product_link(cls, value: Optional[str]):
+        if value is None:
+            return value
+
+        cleaned_value = value.strip()
+
+        if not cleaned_value:
+            return None
+
+        return cleaned_value
+
 
 class SellerProductImageResponse(BaseModel):
     id: int
@@ -80,11 +109,20 @@ class SellerProductImageResponse(BaseModel):
         from_attributes = True
 
 
+class AgentLinkResponse(BaseModel):
+    agent: str
+    label: str
+    url: str
+
+
 class SellerReviewProductResponse(BaseModel):
     id: int
     product_name: str
     purchase_date: Optional[date]
     short_description: Optional[str]
+    source_platform: Optional[str]
+    source_product_id: Optional[str]
+    agent_links: list[AgentLinkResponse] = Field(default_factory=list)
     created_at: datetime
 
     images: list[SellerProductImageResponse] = Field(default_factory=list)

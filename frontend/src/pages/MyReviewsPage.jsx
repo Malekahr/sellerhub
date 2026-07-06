@@ -16,6 +16,7 @@ function MyReviewsPage() {
     product_name: "",
     purchase_date: "",
     short_description: "",
+    product_link: "",
   });
 
   const [activeImageProductId, setActiveImageProductId] = useState(null);
@@ -28,6 +29,7 @@ function MyReviewsPage() {
     product_name: "",
     purchase_date: "",
     short_description: "",
+    product_link: "",
   });
 
   const [editingReviewId, setEditingReviewId] = useState(null);
@@ -172,6 +174,7 @@ function MyReviewsPage() {
       product_name: product.product_name || "",
       purchase_date: product.purchase_date || "",
       short_description: product.short_description || "",
+      product_link: "",
     });
   }
 
@@ -194,14 +197,20 @@ function MyReviewsPage() {
 
     setError("");
 
+    const payload = {
+      product_name: productEditFormData.product_name.trim(),
+      purchase_date: productEditFormData.purchase_date || null,
+      short_description: productEditFormData.short_description.trim(),
+    };
+
+    if (productEditFormData.product_link.trim()) {
+      payload.product_link = productEditFormData.product_link.trim();
+    }
+
     try {
       const updatedProduct = await apiPatch(
         `/seller-reviews/products/${productId}`,
-        {
-          product_name: productEditFormData.product_name.trim(),
-          purchase_date: productEditFormData.purchase_date || null,
-          short_description: productEditFormData.short_description.trim(),
-        }
+        payload
       );
 
       setReviews((previousReviews) =>
@@ -227,6 +236,7 @@ function MyReviewsPage() {
       product_name: "",
       purchase_date: "",
       short_description: "",
+      product_link: "",
     });
   }
 
@@ -254,6 +264,7 @@ function MyReviewsPage() {
         product_name: newProductFormData.product_name.trim(),
         purchase_date: newProductFormData.purchase_date || null,
         short_description: newProductFormData.short_description.trim(),
+        product_link: newProductFormData.product_link.trim() || null,
       });
 
       setReviews((previousReviews) =>
@@ -617,6 +628,21 @@ function MyReviewsPage() {
                               type="date"
                               value={newProductFormData.purchase_date}
                               onChange={handleNewProductChange}
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label htmlFor={`new_product_link_${review.id}`}>
+                              Product link
+                            </label>
+                            <input
+                              id={`new_product_link_${review.id}`}
+                              name="product_link"
+                              type="url"
+                              value={newProductFormData.product_link}
+                              onChange={handleNewProductChange}
+                              maxLength={2000}
+                              placeholder="Weidian, Taobao, Tmall, 1688 or agent product link"
                             />
                           </div>
                         </div>

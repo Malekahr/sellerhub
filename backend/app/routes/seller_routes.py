@@ -1,19 +1,9 @@
 from uuid import uuid4
 
-from app.utils.file_utils import (
-    delete_uploaded_file,
-    upload_file_to_supabase_storage,
-)
-from app.utils.seller_permission_utils import (
-    get_owned_seller_image_or_404,
-    get_owned_seller_product_or_404,
-    get_owned_seller_review_or_404,
-)
-
-
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
-from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import or_
+from sqlalchemy.orm import Session, selectinload
+
 from app.database import get_db
 from app.models.seller_product_image import SellerProductImage
 from app.models.seller_review import SellerReview
@@ -29,13 +19,22 @@ from app.schemas.seller_schema import (
     SellerReviewUpdate,
 )
 from app.security.auth_dependencies import get_current_user
+from app.utils.file_utils import (
+    delete_uploaded_file,
+    upload_file_to_supabase_storage,
+)
+from app.utils.product_link_parser import parse_product_source_link
+from app.utils.seller_permission_utils import (
+    get_owned_seller_image_or_404,
+    get_owned_seller_product_or_404,
+    get_owned_seller_review_or_404,
+)
 
 
 router = APIRouter(
     prefix="/seller-reviews",
     tags=["Seller Reviews"]
 )
-
 
 
 ALLOWED_IMAGE_TYPES = {
@@ -46,6 +45,21 @@ ALLOWED_IMAGE_TYPES = {
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 MAX_IMAGES_PER_PRODUCT = 6
+
+
+def apply_product_link_to_product(
+    product: SellerReviewProduct,
+    product_link: str | None
+):
+    if not product_link:
+        product.source_platform = None
+        product.source_product_id = None
+        return
+
+    platform, product_id = parse_product_source_link(product_link)
+
+    product.source_platform = platform
+    product.source_product_id = product_id
 
 
 @router.post(
@@ -74,6 +88,12 @@ def create_seller_review(
             purchase_date=product_data.purchase_date,
             short_description=product_data.short_description
         )
+
+        if product_data.product_link:
+            apply_product_link_to_product(
+                product=product,
+                product_link=product_data.product_link
+            )
 
         new_review.products.append(product)
 
@@ -142,7 +162,6 @@ def get_all_seller_reviews(
     )
 
     return reviews
-
 
 
 @router.get("/my", response_model=list[SellerReviewResponse])
@@ -236,11 +255,18 @@ def add_product_to_seller_review(
         short_description=product_data.short_description
     )
 
+    if product_data.product_link:
+        apply_product_link_to_product(
+            product=new_product,
+            product_link=product_data.product_link
+        )
+
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
 
     return new_product
+
 
 @router.patch("/{review_id}", response_model=SellerReviewResponse)
 def update_seller_review(
@@ -276,6 +302,7 @@ def update_seller_review(
     )
 
     return updated_review
+
 
 @router.post(
     "/products/{product_id}/images",
@@ -370,8 +397,17 @@ def update_seller_review_product(
 
     update_data = product_data.model_dump(exclude_unset=True)
 
+    product_link_was_sent = "product_link" in update_data
+    product_link = update_data.pop("product_link", None)
+
     for field, value in update_data.items():
         setattr(product, field, value)
+
+    if product_link_was_sent:
+        apply_product_link_to_product(
+            product=product,
+            product_link=product_link
+        )
 
     db.commit()
     db.refresh(product)
@@ -432,6 +468,7 @@ def delete_own_seller_review(
         "review_id": review_id,
         "deleted_by_user_id": current_user.id
     }
+
 
 @router.delete("/images/{image_id}")
 def delete_own_seller_product_image(

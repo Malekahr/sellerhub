@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { getUploadUrl } from "../api/api.js";
 
 function RatingStars({ label, value }) {
@@ -99,6 +100,7 @@ function ReviewCard({
           <div className="product-list">
             {products.map((product) => {
               const productImages = product.images || [];
+              const agentLinks = product.agent_links || [];
               const imagePreviewLimit = 3;
               const imagesAreExpanded = Boolean(
                 expandedImagesByProductId[product.id]
@@ -144,6 +146,21 @@ function ReviewCard({
                             type="date"
                             value={productEditFormData.purchase_date}
                             onChange={onProductEditChange}
+                          />
+                        </div>
+
+                        <div>
+                          <label htmlFor={`product_link_${product.id}`}>
+                            Product link
+                          </label>
+                          <input
+                            id={`product_link_${product.id}`}
+                            name="product_link"
+                            type="url"
+                            value={productEditFormData.product_link}
+                            onChange={onProductEditChange}
+                            maxLength={2000}
+                            placeholder="Paste a new product link to update it"
                           />
                         </div>
 
@@ -195,6 +212,36 @@ function ReviewCard({
                           <p className="product-description">
                             {product.short_description}
                           </p>
+                        )}
+
+                        {(product.source_platform ||
+                          product.source_product_id ||
+                          agentLinks.length > 0) && (
+                          <div className="cluster">
+                            {product.source_platform && (
+                              <span className="badge badge-muted">
+                                {product.source_platform}
+                              </span>
+                            )}
+
+                            {product.source_product_id && (
+                              <span className="badge badge-muted">
+                                ID: {product.source_product_id}
+                              </span>
+                            )}
+
+                            {agentLinks.map((agentLink) => (
+                              <a
+                                key={`${product.id}_${agentLink.agent}`}
+                                href={agentLink.url}
+                                className="btn btn-primary btn-small"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {agentLink.label}
+                              </a>
+                            ))}
+                          </div>
                         )}
 
                         {productImages.length > 0 && (
