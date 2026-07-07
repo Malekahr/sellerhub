@@ -42,24 +42,27 @@ function Navbar() {
               <div className="nav-section">
                 <p className="nav-section-title">Reviews</p>
 
-                <NavLink to="/seller-reviews" className="nav-link">
-                  All reviews
+                <NavLink to="/seller-reviews" end className="nav-link">
+                  Explore
                 </NavLink>
 
-                <NavLink to="/my-reviews" className="nav-link">
-                  My reviews
+                <NavLink to="/my-reviews" end className="nav-link">
+                  My Reviews
                 </NavLink>
 
-                <NavLink to="/seller-reviews/create" className="nav-link">
-                  Create review
+                <NavLink to="/seller-reviews/create" end className="nav-link">
+                  Create Review
                 </NavLink>
               </div>
 
               <div className="nav-section">
                 <p className="nav-section-title">Community</p>
 
-                <NavLink to="/groups" className="nav-link">
-                  Groups
+                <NavLink to="/groups" end className="nav-link">
+                  <span style={styles.navItemWithBadge}>
+                    Groups
+                    <span style={styles.soonBadge}>Soon</span>
+                  </span>
                 </NavLink>
               </div>
 
@@ -67,8 +70,8 @@ function Navbar() {
                 <div className="nav-section">
                   <p className="nav-section-title">Admin</p>
 
-                  <NavLink to="/admin" className="nav-link">
-                    Admin dashboard
+                  <NavLink to="/admin" end className="nav-link">
+                    Dashboard
                   </NavLink>
                 </div>
               )}
@@ -100,11 +103,11 @@ function Navbar() {
             <div className="nav-section">
               <p className="nav-section-title">Account</p>
 
-              <NavLink to="/login" className="nav-link">
+              <NavLink to="/login" end className="nav-link">
                 Login
               </NavLink>
 
-              <NavLink to="/register" className="nav-link">
+              <NavLink to="/register" end className="nav-link">
                 Register
               </NavLink>
             </div>
@@ -114,24 +117,24 @@ function Navbar() {
 
       {currentUser && (
         <nav className="mobile-bottom-nav">
-          <NavLink to="/seller-reviews" className="mobile-nav-link">
-            Reviews
+          <NavLink to="/seller-reviews" end className="mobile-nav-link">
+            Explore
           </NavLink>
 
-          <NavLink to="/my-reviews" className="mobile-nav-link">
+          <NavLink to="/my-reviews" end className="mobile-nav-link">
             Mine
           </NavLink>
 
-          <NavLink to="/seller-reviews/create" className="mobile-nav-link">
+          <NavLink to="/seller-reviews/create" end className="mobile-nav-link">
             Create
           </NavLink>
 
-          <NavLink to="/groups" className="mobile-nav-link">
+          <NavLink to="/groups" end className="mobile-nav-link">
             Groups
           </NavLink>
 
           {currentUser.role === "admin" && (
-            <NavLink to="/admin" className="mobile-nav-link">
+            <NavLink to="/admin" end className="mobile-nav-link">
               Admin
             </NavLink>
           )}
@@ -140,5 +143,29 @@ function Navbar() {
     </>
   );
 }
+
+const styles = {
+  navItemWithBadge: {
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "0.75rem",
+  },
+
+  soonBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "999px",
+    padding: "0.18rem 0.48rem",
+    background: "rgba(255, 184, 77, 0.18)",
+    color: "#9a681f",
+    fontSize: "0.68rem",
+    fontWeight: "900",
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+  },
+};
 
 export default Navbar;
