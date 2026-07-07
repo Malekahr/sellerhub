@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import MyReviewsPage from "./pages/MyReviewsPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
+import SellerReviewDetailPage from "./pages/SellerReviewDetailPage.jsx";
 import SellerReviewsPage from "./pages/SellerReviewsPage.jsx";
 
 function App() {
@@ -34,6 +35,15 @@ function App() {
           element={
             <ProtectedRoute>
               <CreateSellerReviewPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/seller-reviews/:reviewId"
+          element={
+            <ProtectedRoute>
+              <SellerReviewDetailPage />
             </ProtectedRoute>
           }
         />

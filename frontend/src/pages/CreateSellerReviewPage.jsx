@@ -3,6 +3,17 @@ import { useNavigate } from "react-router-dom";
 
 import { apiPost } from "../api/api.js";
 
+const PRODUCT_TYPE_OPTIONS = [
+  "Shoes",
+  "Clothing",
+  "Bags",
+  "Watches",
+  "Jewelry",
+  "Accessories",
+  "Electronics",
+  "Other",
+];
+
 function CreateSellerReviewPage() {
   const navigate = useNavigate();
 
@@ -10,6 +21,7 @@ function CreateSellerReviewPage() {
     seller_name: "",
     seller_link: "",
     product_type: "",
+    seller_specialties: "",
     quality_rating: "5",
     price_rating: "5",
     description: "",
@@ -42,6 +54,7 @@ function CreateSellerReviewPage() {
         seller_name: formData.seller_name.trim(),
         seller_link: formData.seller_link.trim(),
         product_type: formData.product_type.trim(),
+        seller_specialties: formData.seller_specialties.trim() || null,
         quality_rating: Number(formData.quality_rating),
         price_rating: Number(formData.price_rating),
         description: formData.description.trim(),
@@ -447,7 +460,7 @@ function CreateSellerReviewPage() {
               <section className="create-review-section">
                 <div className="create-review-section-header">
                   <h2>Seller details</h2>
-                  <p>Start with the seller name, seller page and category.</p>
+                  <p>Start with the seller name, seller page, category and what they sell.</p>
                 </div>
 
                 <div className="create-review-grid">
@@ -479,19 +492,38 @@ function CreateSellerReviewPage() {
                     />
                   </div>
 
-                  <div className="create-review-field full">
-                    <label htmlFor="product_type">Product type</label>
-                    <input
+                  <div className="create-review-field">
+                    <label htmlFor="product_type">Product category</label>
+                    <select
                       id="product_type"
                       name="product_type"
-                      type="text"
                       value={formData.product_type}
                       onChange={handleChange}
-                      placeholder="Example: sneakers, clothes, watches"
                       required
-                      minLength={2}
-                      maxLength={100}
+                    >
+                      <option value="">Choose a category</option>
+                      {PRODUCT_TYPE_OPTIONS.map((productType) => (
+                        <option key={productType} value={productType}>
+                          {productType}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="create-review-field">
+                    <label htmlFor="seller_specialties">Brands / styles sold</label>
+                    <input
+                      id="seller_specialties"
+                      name="seller_specialties"
+                      type="text"
+                      value={formData.seller_specialties}
+                      onChange={handleChange}
+                      placeholder="Example: Nike, Adidas, New Balance, streetwear"
+                      maxLength={300}
                     />
+                    <small>
+                      Show what this seller is known for on the Explore page.
+                    </small>
                   </div>
                 </div>
               </section>

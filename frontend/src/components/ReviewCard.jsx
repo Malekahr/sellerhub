@@ -55,12 +55,52 @@ function ReviewCard({
   }
 
   return (
-    <article className="review-card marketplace-review-card">
+    <>
+      <style>{`
+        .review-specialties {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.45rem;
+          margin-top: 0.75rem;
+        }
+
+        .review-specialty-chip {
+          display: inline-flex;
+          align-items: center;
+          border: 1px solid rgba(23, 27, 32, 0.09);
+          border-radius: 999px;
+          padding: 0.36rem 0.58rem;
+          background: rgba(255, 255, 255, 0.72);
+          color: #18212b;
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+      `}</style>
+
+      <article className="review-card marketplace-review-card">
       <header className="review-card-header">
         <div className="review-seller-main">
           <span className="badge badge-muted">{review.product_type}</span>
 
           <h2 className="review-seller-name">{review.seller_name}</h2>
+
+          {review.seller_specialties && (
+            <div className="review-specialties">
+              {review.seller_specialties
+                .split(",")
+                .map((specialty) => specialty.trim())
+                .filter(Boolean)
+                .slice(0, 8)
+                .map((specialty) => (
+                  <span
+                    key={`${review.id}_${specialty}`}
+                    className="review-specialty-chip"
+                  >
+                    {specialty}
+                  </span>
+                ))}
+            </div>
+          )}
 
           {review.description && (
             <p className="review-description">{review.description}</p>
@@ -395,7 +435,8 @@ function ReviewCard({
       </section>
 
       {children && <div className="review-card-actions">{children}</div>}
-    </article>
+      </article>
+    </>
   );
 }
 

@@ -15,6 +15,7 @@ class SellerReview(Base):
     seller_link = Column(String(500), nullable=False)
 
     product_type = Column(String(100), nullable=False)
+    seller_specialties = Column(String(300), nullable=True)
 
     quality_rating = Column(Integer, nullable=False)
     price_rating = Column(Integer, nullable=False)

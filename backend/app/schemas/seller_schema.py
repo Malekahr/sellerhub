@@ -33,6 +33,7 @@ class SellerReviewCreate(BaseModel):
     seller_name: str = Field(min_length=2, max_length=100)
     seller_link: HttpUrl
     product_type: str = Field(min_length=2, max_length=100)
+    seller_specialties: Optional[str] = Field(default=None, max_length=300)
 
     quality_rating: int = Field(ge=1, le=5)
     price_rating: int = Field(ge=1, le=5)
@@ -49,11 +50,25 @@ class SellerReviewCreate(BaseModel):
     def clean_text_fields(cls, value: str):
         return value.strip()
 
+    @field_validator("seller_specialties", "description")
+    @classmethod
+    def clean_optional_text_fields(cls, value: Optional[str]):
+        if value is None:
+            return value
+
+        cleaned_value = value.strip()
+
+        if not cleaned_value:
+            return None
+
+        return cleaned_value
+
 
 class SellerReviewUpdate(BaseModel):
     seller_name: Optional[str] = Field(default=None, min_length=2, max_length=100)
     seller_link: Optional[HttpUrl] = None
     product_type: Optional[str] = Field(default=None, min_length=2, max_length=100)
+    seller_specialties: Optional[str] = Field(default=None, max_length=300)
 
     quality_rating: Optional[int] = Field(default=None, ge=1, le=5)
     price_rating: Optional[int] = Field(default=None, ge=1, le=5)
@@ -62,11 +77,24 @@ class SellerReviewUpdate(BaseModel):
 
     @field_validator("seller_name", "product_type")
     @classmethod
-    def clean_optional_text_fields(cls, value: Optional[str]):
+    def clean_optional_required_text_fields(cls, value: Optional[str]):
         if value is None:
             return value
 
         return value.strip()
+
+    @field_validator("seller_specialties", "description")
+    @classmethod
+    def clean_optional_text_fields(cls, value: Optional[str]):
+        if value is None:
+            return value
+
+        cleaned_value = value.strip()
+
+        if not cleaned_value:
+            return None
+
+        return cleaned_value
 
 
 class SellerReviewProductUpdate(BaseModel):
@@ -136,6 +164,7 @@ class SellerReviewResponse(BaseModel):
     seller_name: str
     seller_link: str
     product_type: str
+    seller_specialties: Optional[str]
 
     quality_rating: int
     price_rating: int

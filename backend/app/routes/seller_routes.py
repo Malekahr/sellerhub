@@ -76,6 +76,7 @@ def create_seller_review(
         seller_name=review_data.seller_name,
         seller_link=str(review_data.seller_link),
         product_type=review_data.product_type,
+        seller_specialties=review_data.seller_specialties,
         quality_rating=review_data.quality_rating,
         price_rating=review_data.price_rating,
         description=review_data.description,
@@ -131,6 +132,7 @@ def get_all_seller_reviews(
             or_(
                 SellerReview.seller_name.ilike(search_value),
                 SellerReview.product_type.ilike(search_value),
+                SellerReview.seller_specialties.ilike(search_value),
                 SellerReview.description.ilike(search_value),
                 SellerReview.products.any(
                     SellerReviewProduct.product_name.ilike(search_value)
