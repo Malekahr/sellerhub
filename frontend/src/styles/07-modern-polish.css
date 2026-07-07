@@ -1,68 +1,70 @@
 /* =========================
-   SellerHub Modern Polish
-   Safe CSS-only visual upgrade
+   SellerHub Modern Polish v2
+   Clean marketplace/dashboard style
 ========================= */
 
 :root {
-  --color-bg: #f4eee4;
-  --color-bg-soft: #fbf6ee;
-  --color-surface: #fffdf8;
-  --color-surface-soft: #fff8ee;
+  --color-bg: #f5f3ef;
+  --color-bg-soft: #fbfaf7;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f8f6f1;
 
-  --color-text: #191713;
-  --color-text-soft: #5e574f;
-  --color-muted: #91877b;
+  --color-text: #171b20;
+  --color-text-soft: #4f5863;
+  --color-muted: #8b8176;
 
-  --color-border: rgba(42, 35, 27, 0.1);
-  --color-border-strong: rgba(42, 35, 27, 0.18);
+  --color-primary: #18212b;
+  --color-primary-hover: #0f1720;
 
-  --color-primary: #1d252f;
-  --color-primary-hover: #111820;
+  --color-accent: #087f5b;
+  --color-accent-hover: #06684b;
+  --color-accent-soft: rgba(8, 127, 91, 0.1);
 
-  --color-accent: #ffb84d;
-  --color-accent-hover: #f3a529;
-  --color-accent-soft: rgba(255, 184, 77, 0.18);
+  --color-danger: #d64545;
+  --color-danger-hover: #b92f2f;
+  --color-danger-soft: rgba(214, 69, 69, 0.09);
 
-  --radius-sm: 0.65rem;
-  --radius-md: 0.95rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.75rem;
+  --color-border: rgba(23, 27, 32, 0.1);
+  --color-border-strong: rgba(23, 27, 32, 0.18);
 
-  --shadow-sm: 0 8px 24px rgba(35, 28, 21, 0.06);
-  --shadow-md: 0 18px 45px rgba(35, 28, 21, 0.1);
-  --shadow-lg: 0 26px 80px rgba(35, 28, 21, 0.14);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 32, 0.04);
+  --shadow-sm: 0 8px 22px rgba(15, 23, 32, 0.06);
+  --shadow-md: 0 18px 44px rgba(15, 23, 32, 0.1);
+  --shadow-lg: 0 28px 80px rgba(15, 23, 32, 0.14);
 
   --transition-fast: 160ms ease;
   --transition-normal: 240ms ease;
 }
 
 /* =========================
-   Base atmosphere
+   Base
 ========================= */
 
 html {
-  background: #f4eee4;
+  background: var(--color-bg);
 }
 
 body {
   background:
-    radial-gradient(circle at top left, rgba(255, 184, 77, 0.22), transparent 28rem),
-    radial-gradient(circle at 85% 8%, rgba(29, 37, 47, 0.08), transparent 24rem),
-    linear-gradient(135deg, #f7f0e6 0%, #f2eadf 100%);
+    radial-gradient(circle at top left, rgba(8, 127, 91, 0.08), transparent 26rem),
+    radial-gradient(circle at top right, rgba(24, 33, 43, 0.08), transparent 28rem),
+    linear-gradient(135deg, #f7f5f0 0%, #f1eee8 100%);
   color: var(--color-text);
   letter-spacing: -0.01em;
 }
 
-.app-shell {
+.app-shell,
+.main-content {
   background: transparent;
 }
 
-.main-content {
-  position: relative;
-}
-
 /* =========================
-   Navigation polish
+   Navigation
 ========================= */
 
 .brand {
@@ -74,26 +76,26 @@ body {
 .brand-mark {
   width: 36px;
   height: 36px;
-  border-radius: 13px;
+  border-radius: 12px;
   background:
-    radial-gradient(circle at 30% 20%, rgba(255, 184, 77, 0.5), transparent 36%),
-    var(--color-primary);
-  color: #fff8ee;
-  box-shadow: 0 10px 24px rgba(29, 37, 47, 0.18);
+    linear-gradient(135deg, #18212b 0%, #263442 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(24, 33, 43, 0.18);
 }
 
 .mobile-topbar {
   height: 66px;
-  background: rgba(250, 246, 239, 0.86);
-  border-bottom: 1px solid rgba(42, 35, 27, 0.08);
-  backdrop-filter: blur(20px);
+  background: rgba(251, 250, 247, 0.88);
+  border-bottom: 1px solid rgba(23, 27, 32, 0.08);
+  backdrop-filter: blur(18px);
 }
 
 .topbar-logout {
-  border: 1px solid rgba(29, 37, 47, 0.12);
-  background: rgba(255, 253, 248, 0.9);
+  border: 1px solid rgba(23, 27, 32, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
   color: var(--color-primary);
-  box-shadow: 0 8px 22px rgba(35, 28, 21, 0.06);
+  box-shadow: var(--shadow-xs);
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast),
@@ -110,20 +112,19 @@ body {
   right: 10px;
   bottom: 10px;
   left: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 6px;
   padding: 7px;
-  background:
-    linear-gradient(135deg, rgba(29, 37, 47, 0.96), rgba(18, 23, 29, 0.96));
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 24px;
-  box-shadow: 0 20px 55px rgba(29, 37, 47, 0.28);
+  background: rgba(24, 33, 43, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 20px 55px rgba(15, 23, 32, 0.28);
+  backdrop-filter: blur(18px);
 }
 
 .mobile-nav-link {
   min-height: 44px;
-  border-radius: 17px;
-  color: rgba(255, 248, 238, 0.72);
+  border-radius: 15px;
+  color: rgba(255, 255, 255, 0.68);
   font-size: 12.5px;
   font-weight: 900;
   transition:
@@ -133,14 +134,15 @@ body {
 }
 
 .mobile-nav-link:hover {
-  color: #fff8ee;
+  color: #ffffff;
 }
 
 .mobile-nav-link.active {
-  background:
-    linear-gradient(135deg, #fff8ee, #f4dec0);
+  background: #ffffff;
   color: var(--color-primary);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
 @media (min-width: 900px) {
@@ -150,12 +152,11 @@ body {
     left: 18px;
     width: 268px;
     padding: 22px;
-    background:
-      linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(255, 248, 238, 0.82));
-    border: 1px solid rgba(42, 35, 27, 0.1);
-    border-radius: 32px;
+    background: rgba(251, 250, 247, 0.88);
+    border: 1px solid rgba(23, 27, 32, 0.09);
+    border-radius: 30px;
     backdrop-filter: blur(22px);
-    box-shadow: 0 26px 80px rgba(35, 28, 21, 0.12);
+    box-shadow: 0 26px 80px rgba(15, 23, 32, 0.1);
   }
 
   .sidebar-brand {
@@ -172,7 +173,7 @@ body {
 
   .nav-section-title {
     margin-bottom: 6px;
-    color: rgba(94, 87, 79, 0.82);
+    color: rgba(79, 88, 99, 0.72);
     font-size: 11.5px;
     font-weight: 950;
     letter-spacing: 0.11em;
@@ -180,25 +181,29 @@ body {
 
   .nav-link {
     min-height: 46px;
-    border-radius: 16px;
+    border-radius: 15px;
     padding: 0 16px;
-    color: #4b5563;
+    color: #47505c;
     font-size: 14.5px;
     font-weight: 900;
+    transition:
+      transform var(--transition-fast),
+      background var(--transition-fast),
+      color var(--transition-fast),
+      box-shadow var(--transition-fast);
   }
 
   .nav-link:hover {
-    background: rgba(29, 37, 47, 0.055);
+    background: rgba(24, 33, 43, 0.055);
     color: var(--color-primary);
     transform: translateX(3px);
   }
 
   .nav-link.active {
     background:
-      radial-gradient(circle at top left, rgba(255, 184, 77, 0.28), transparent 38%),
-      var(--color-primary);
-    color: #fff8ee;
-    box-shadow: 0 14px 32px rgba(29, 37, 47, 0.18);
+      linear-gradient(135deg, #18212b 0%, #263442 100%);
+    color: #ffffff;
+    box-shadow: 0 14px 30px rgba(24, 33, 43, 0.18);
   }
 
   .main-content {
@@ -208,7 +213,7 @@ body {
 }
 
 /* =========================
-   Page headers
+   Headers
 ========================= */
 
 .page-header {
@@ -227,7 +232,7 @@ body {
 }
 
 /* =========================
-   Cards / panels
+   Cards
 ========================= */
 
 .card,
@@ -240,10 +245,11 @@ body {
 .admin-review-item,
 .admin-product-item,
 .members-card,
-.add-member-card {
-  border: 1px solid rgba(42, 35, 27, 0.1);
+.add-member-card,
+.product-item {
+  border: 1px solid rgba(23, 27, 32, 0.09);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 248, 238, 0.78));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 246, 241, 0.86));
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
@@ -251,8 +257,9 @@ body {
 .card:hover,
 .review-card:hover,
 .marketplace-review-card:hover,
-.community-group-card:hover {
-  border-color: rgba(42, 35, 27, 0.18);
+.community-group-card:hover,
+.product-item:hover {
+  border-color: rgba(23, 27, 32, 0.16);
   box-shadow: var(--shadow-md);
 }
 
@@ -261,24 +268,30 @@ body {
 }
 
 /* =========================
-   Buttons
+   Buttons - upgraded
 ========================= */
 
 .button,
 .btn,
 button.btn,
-a.btn {
+a.btn,
+.product-actions a,
+.product-actions button,
+.review-actions a,
+.review-actions button {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 43px;
+  border-radius: 14px;
+  padding: 0.78rem 1.1rem;
   border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0.75rem 1.08rem;
-  font-weight: 900;
+  font-weight: 950;
   line-height: 1;
   text-align: center;
+  text-decoration: none;
+  cursor: pointer;
   box-shadow: none;
   transition:
     transform var(--transition-fast),
@@ -289,62 +302,96 @@ a.btn {
 }
 
 .button:hover:not(:disabled),
-.btn:hover:not(:disabled) {
+.btn:hover:not(:disabled),
+.product-actions a:hover,
+.product-actions button:hover,
+.review-actions a:hover,
+.review-actions button:hover {
   transform: translateY(-1px);
 }
 
 .button-primary,
-.btn-primary {
+.btn-primary,
+.product-actions .button-primary,
+.product-actions .btn-primary {
   background:
-    radial-gradient(circle at top left, rgba(255, 184, 77, 0.24), transparent 40%),
-    var(--color-primary);
-  color: #fff8ee;
-  box-shadow: 0 12px 26px rgba(29, 37, 47, 0.18);
+    linear-gradient(135deg, #18212b 0%, #263442 100%);
+  color: #ffffff;
+  border-color: rgba(24, 33, 43, 0.08);
+  box-shadow: 0 12px 26px rgba(24, 33, 43, 0.16);
 }
 
 .button-primary:hover:not(:disabled),
-.btn-primary:hover:not(:disabled) {
+.btn-primary:hover:not(:disabled),
+.product-actions .button-primary:hover,
+.product-actions .btn-primary:hover {
   background:
-    radial-gradient(circle at top left, rgba(255, 184, 77, 0.32), transparent 42%),
-    var(--color-primary-hover);
-  color: #fff8ee;
-  box-shadow: 0 16px 34px rgba(29, 37, 47, 0.24);
+    linear-gradient(135deg, #0f1720 0%, #1d2a36 100%);
+  color: #ffffff;
+  box-shadow: 0 16px 34px rgba(24, 33, 43, 0.22);
 }
 
 .button-secondary,
-.btn-secondary {
-  background: rgba(255, 253, 248, 0.86);
+.btn-secondary,
+.product-actions .button-secondary,
+.product-actions .btn-secondary {
+  background: #ffffff;
   color: var(--color-primary);
-  border-color: rgba(42, 35, 27, 0.13);
+  border-color: rgba(23, 27, 32, 0.12);
+  box-shadow: 0 6px 16px rgba(15, 23, 32, 0.045);
 }
 
 .button-secondary:hover:not(:disabled),
-.btn-secondary:hover:not(:disabled) {
-  background: #ffffff;
-  border-color: rgba(42, 35, 27, 0.22);
-  box-shadow: var(--shadow-sm);
+.btn-secondary:hover:not(:disabled),
+.product-actions .button-secondary:hover,
+.product-actions .btn-secondary:hover {
+  background: #f8faf9;
+  border-color: rgba(8, 127, 91, 0.24);
+  color: var(--color-accent);
+  box-shadow: 0 12px 26px rgba(15, 23, 32, 0.08);
 }
 
 .button-danger,
-.btn-danger {
-  background: rgba(214, 69, 69, 0.08);
+.btn-danger,
+.product-actions .button-danger,
+.product-actions .btn-danger {
+  background: #ffffff;
   color: var(--color-danger);
   border-color: rgba(214, 69, 69, 0.2);
+  box-shadow: 0 6px 16px rgba(214, 69, 69, 0.045);
 }
 
 .button-danger:hover:not(:disabled),
-.btn-danger:hover:not(:disabled) {
+.btn-danger:hover:not(:disabled),
+.product-actions .button-danger:hover,
+.product-actions .btn-danger:hover {
   background: var(--color-danger);
   color: #ffffff;
   border-color: var(--color-danger);
-  box-shadow: 0 12px 28px rgba(214, 69, 69, 0.18);
+  box-shadow: 0 14px 30px rgba(214, 69, 69, 0.18);
 }
 
 .button-small,
 .btn-small {
-  min-height: 35px;
+  min-height: 36px;
   padding: 0.56rem 0.82rem;
+  border-radius: 12px;
   font-size: 0.84rem;
+}
+
+/* Product action buttons specifically */
+.product-actions {
+  gap: 0.7rem;
+}
+
+.product-actions .button,
+.product-actions .btn,
+.product-actions a,
+.product-actions button {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 16px;
+  font-size: 0.95rem;
 }
 
 /* =========================
@@ -354,9 +401,9 @@ a.btn {
 input,
 textarea,
 select {
-  border: 1px solid rgba(42, 35, 27, 0.13);
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.92);
+  border: 1px solid rgba(23, 27, 32, 0.12);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.92);
   color: var(--color-text);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
@@ -364,21 +411,21 @@ select {
 input:hover,
 textarea:hover,
 select:hover {
-  border-color: rgba(42, 35, 27, 0.2);
+  border-color: rgba(23, 27, 32, 0.2);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: rgba(29, 37, 47, 0.45);
+  border-color: rgba(8, 127, 91, 0.45);
   background: #ffffff;
   box-shadow:
-    0 0 0 4px rgba(255, 184, 77, 0.18),
+    0 0 0 4px rgba(8, 127, 91, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 label {
-  color: #3b342c;
+  color: #252a31;
   font-weight: 850;
 }
 
@@ -395,38 +442,46 @@ label {
 }
 
 /* =========================
-   Alerts / states / badges
+   Alerts / badges / states
 ========================= */
 
 .alert {
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1px solid transparent;
   box-shadow: var(--shadow-sm);
 }
 
 .alert-error {
-  background: rgba(214, 69, 69, 0.1);
+  background: var(--color-danger-soft);
   color: #991b1b;
   border-color: rgba(214, 69, 69, 0.18);
 }
 
 .alert-success {
-  background: rgba(35, 196, 131, 0.12);
-  color: #087047;
-  border-color: rgba(35, 196, 131, 0.2);
+  background: var(--color-accent-soft);
+  color: #06684b;
+  border-color: rgba(8, 127, 91, 0.18);
 }
 
 .badge {
   border-radius: 999px;
-  font-weight: 900;
+  font-weight: 950;
+}
+
+.badge-public,
+.badge-success,
+.product-count-badge {
+  background: rgba(8, 127, 91, 0.1) !important;
+  color: #06684b !important;
+  border-color: rgba(8, 127, 91, 0.16) !important;
 }
 
 .empty-state,
 .loading-state {
-  border-color: rgba(42, 35, 27, 0.16);
+  border-color: rgba(23, 27, 32, 0.14);
   background:
-    radial-gradient(circle at top left, rgba(255, 184, 77, 0.14), transparent 36%),
-    rgba(255, 253, 248, 0.72);
+    radial-gradient(circle at top left, rgba(8, 127, 91, 0.08), transparent 36%),
+    rgba(255, 255, 255, 0.78);
   box-shadow: var(--shadow-sm);
 }
 
@@ -451,14 +506,14 @@ label {
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--color-accent), rgba(255, 184, 77, 0));
-  opacity: 0.85;
+  background: linear-gradient(180deg, var(--color-accent), rgba(8, 127, 91, 0));
+  opacity: 0.9;
 }
 
 .review-card-header {
   gap: 1.25rem;
   padding-bottom: 1.15rem;
-  border-bottom: 1px solid rgba(42, 35, 27, 0.09);
+  border-bottom: 1px solid rgba(23, 27, 32, 0.08);
 }
 
 .review-seller-name,
@@ -468,34 +523,31 @@ label {
   letter-spacing: -0.055em;
 }
 
-.review-description {
+.review-description,
+.product-description,
+.group-description {
   color: var(--color-text-soft);
 }
 
 .review-ratings,
 .rating-box {
-  border: 1px solid rgba(42, 35, 27, 0.1);
-  border-radius: 22px;
+  border: 1px solid rgba(23, 27, 32, 0.09);
+  border-radius: 20px;
   background:
-    radial-gradient(circle at top left, rgba(255, 184, 77, 0.16), transparent 42%),
-    rgba(255, 248, 238, 0.82);
+    radial-gradient(circle at top left, rgba(8, 127, 91, 0.08), transparent 42%),
+    rgba(255, 255, 255, 0.72);
 }
 
 .review-rating-stars {
-  color: #d99417;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+  color: #087f5b;
 }
 
 .review-products {
-  border-top-color: rgba(42, 35, 27, 0.09);
+  border-top-color: rgba(23, 27, 32, 0.08);
 }
 
 .product-item {
-  border: 1px solid rgba(42, 35, 27, 0.09);
-  border-radius: 22px;
-  background:
-    linear-gradient(135deg, rgba(255, 253, 248, 0.9), rgba(255, 248, 238, 0.72));
-  box-shadow: 0 8px 22px rgba(35, 28, 21, 0.045);
+  overflow: hidden;
 }
 
 .product-name {
@@ -503,13 +555,9 @@ label {
   font-weight: 950;
 }
 
-.product-description {
-  color: var(--color-text-soft);
-}
-
 .product-image-card {
-  border-color: rgba(42, 35, 27, 0.1);
-  border-radius: 20px;
+  border-color: rgba(23, 27, 32, 0.1);
+  border-radius: 18px;
   overflow: hidden;
 }
 
@@ -518,37 +566,32 @@ label {
 }
 
 /* =========================
-   Groups / community cards
+   Groups
 ========================= */
 
 .group-card,
 .community-group-card {
-  border-radius: 26px;
+  border-radius: 24px;
 }
 
 .group-avatar {
-  border-radius: 17px;
+  border-radius: 15px;
   background:
-    radial-gradient(circle at top left, rgba(255, 184, 77, 0.32), transparent 40%),
-    var(--color-primary);
-  color: #fff8ee;
-  box-shadow: 0 12px 24px rgba(29, 37, 47, 0.16);
+    linear-gradient(135deg, #18212b 0%, #263442 100%);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(24, 33, 43, 0.15);
 }
 
 .group-name {
   font-weight: 950;
 }
 
-.group-description {
-  color: var(--color-text-soft);
-}
-
 .group-card-actions {
-  border-top-color: rgba(42, 35, 27, 0.09);
+  border-top-color: rgba(23, 27, 32, 0.08);
 }
 
 /* =========================
-   Admin polish
+   Admin
 ========================= */
 
 .admin-dashboard-grid {
@@ -568,7 +611,7 @@ label {
   width: 100px;
   height: 100px;
   border-radius: 999px;
-  background: rgba(255, 184, 77, 0.18);
+  background: rgba(8, 127, 91, 0.1);
 }
 
 .admin-stat-card strong {
@@ -590,7 +633,7 @@ label {
 
 .admin-image-item {
   border-radius: 18px;
-  background: rgba(255, 253, 248, 0.82);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .admin-image-item img {
@@ -598,7 +641,7 @@ label {
 }
 
 /* =========================
-   Auth pages
+   Auth
 ========================= */
 
 .auth-page {
@@ -607,20 +650,20 @@ label {
 }
 
 .auth-card {
-  border: 1px solid rgba(42, 35, 27, 0.1);
-  border-radius: 30px;
+  border: 1px solid rgba(23, 27, 32, 0.09);
+  border-radius: 28px;
   background:
-    radial-gradient(circle at top left, rgba(255, 184, 77, 0.2), transparent 34%),
-    rgba(255, 253, 248, 0.9);
+    radial-gradient(circle at top left, rgba(8, 127, 91, 0.08), transparent 34%),
+    rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow-lg);
 }
 
 .auth-switch-text a {
-  color: #9a681f;
+  color: var(--color-accent);
 }
 
 /* =========================
-   Mobile refinements
+   Mobile
 ========================= */
 
 @media (max-width: 899px) {
@@ -639,8 +682,9 @@ label {
   .card,
   .form-card,
   .review-card,
-  .marketplace-review-card {
-    border-radius: 24px;
+  .marketplace-review-card,
+  .product-item {
+    border-radius: 22px;
     padding: 1rem;
   }
 
@@ -664,11 +708,8 @@ label {
 
   .product-actions {
     width: 100%;
-  }
-
-  .product-actions .btn,
-  .product-actions .button {
-    flex: 1 1 auto;
+    display: grid;
+    gap: 0.65rem;
   }
 
   .button-row {
@@ -691,7 +732,7 @@ label {
     right: 8px;
     bottom: 8px;
     left: 8px;
-    border-radius: 22px;
+    border-radius: 20px;
   }
 
   .mobile-nav-link {
