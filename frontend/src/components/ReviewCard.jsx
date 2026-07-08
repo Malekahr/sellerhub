@@ -1,6 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { getUploadUrl } from "../api/api.js";
+
+const KAKOBUY_AFFILIATE_CODE = "szyje";
+
+function buildKakobuySellerAffiliateUrl(originalUrl) {
+  const cleanedUrl = String(originalUrl || "").trim();
+
+  if (!cleanedUrl) {
+    return "#";
+  }
+
+  try {
+    const parsedUrl = new URL(cleanedUrl);
+    const hostname = parsedUrl.hostname.toLowerCase();
+
+    if (hostname.includes("kakobuy.com") || hostname.includes("ikako.vip")) {
+      if (!parsedUrl.searchParams.has("affcode")) {
+        parsedUrl.searchParams.set("affcode", KAKOBUY_AFFILIATE_CODE);
+      }
+
+      return parsedUrl.toString();
+    }
+  } catch {
+    return cleanedUrl;
+  }
+
+  return `https://www.kakobuy.com/item/store?url=${encodeURIComponent(
+    cleanedUrl
+  )}&affcode=${encodeURIComponent(KAKOBUY_AFFILIATE_CODE)}`;
+}
 
 function RatingStars({ label, value }) {
   const rating = Number(value) || 0;
@@ -44,8 +73,17 @@ function ReviewCard({
   deletingImageId,
 }) {
   const [expandedImagesByProductId, setExpandedImagesByProductId] = useState({});
+  const [lightboxData, setLightboxData] = useState({
+    isOpen: false,
+    images: [],
+    currentIndex: 0,
+    productName: "",
+  });
 
   const products = review.products || [];
+  const activeLightboxImage = lightboxData.isOpen
+    ? lightboxData.images[lightboxData.currentIndex]
+    : null;
 
   function toggleProductImages(productId) {
     setExpandedImagesByProductId((currentState) => ({
@@ -54,53 +92,99 @@ function ReviewCard({
     }));
   }
 
+  function openImageLightbox(images, imageIndex, productName) {
+    if (!images || images.length === 0) {
+      return;
+    }
+
+    setLightboxData({
+      isOpen: true,
+      images,
+      currentIndex: imageIndex,
+      productName,
+    });
+  }
+
+  function closeImageLightbox() {
+    setLightboxData({
+      isOpen: false,
+      images: [],
+      currentIndex: 0,
+      productName: "",
+    });
+  }
+
+  function showPreviousImage() {
+    setLightboxData((currentData) => ({
+      ...currentData,
+      currentIndex:
+        currentData.currentIndex === 0
+          ? currentData.images.length - 1
+          : currentData.currentIndex - 1,
+    }));
+  }
+
+  function showNextImage() {
+    setLightboxData((currentData) => ({
+      ...currentData,
+      currentIndex:
+        currentData.currentIndex === currentData.images.length - 1
+          ? 0
+          : currentData.currentIndex + 1,
+    }));
+  }
+
+  useEffect(() => {
+    if (!lightboxData.isOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        closeImageLightbox();
+      }
+
+      if (event.key === "ArrowLeft") {
+        showPreviousImage();
+      }
+
+      if (event.key === "ArrowRight") {
+        showNextImage();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [lightboxData.isOpen]);
+
   return (
-    <>
-      <style>{`
-        .review-specialties {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.45rem;
-          margin-top: 0.75rem;
-        }
-
-        .review-specialty-chip {
-          display: inline-flex;
-          align-items: center;
-          border: 1px solid rgba(23, 27, 32, 0.09);
-          border-radius: 999px;
-          padding: 0.36rem 0.58rem;
-          background: rgba(255, 255, 255, 0.72);
-          color: #18212b;
-          font-size: 0.78rem;
-          font-weight: 900;
-        }
-      `}</style>
-
-      <article className="review-card marketplace-review-card">
+    <article className="review-card marketplace-review-card">
       <header className="review-card-header">
         <div className="review-seller-main">
           <span className="badge badge-muted">{review.product_type}</span>
 
-          <h2 className="review-seller-name">{review.seller_name}</h2>
-
           {review.seller_specialties && (
-            <div className="review-specialties">
+            <div className="seller-specialties">
               {review.seller_specialties
                 .split(",")
                 .map((specialty) => specialty.trim())
                 .filter(Boolean)
-                .slice(0, 8)
                 .map((specialty) => (
-                  <span
-                    key={`${review.id}_${specialty}`}
-                    className="review-specialty-chip"
-                  >
+                  <span key={specialty} className="badge badge-muted">
                     {specialty}
                   </span>
                 ))}
             </div>
           )}
+
+          <h2 className="review-seller-name">{review.seller_name}</h2>
 
           {review.description && (
             <p className="review-description">{review.description}</p>
@@ -115,7 +199,7 @@ function ReviewCard({
 
           {review.seller_link && (
             <a
-              href={review.seller_link}
+              href={buildKakobuySellerAffiliateUrl(review.seller_link)}
               className="btn btn-primary btn-full"
               target="_blank"
               rel="noreferrer"
@@ -254,45 +338,38 @@ function ReviewCard({
                           </p>
                         )}
 
-                        {(product.source_platform ||
-                          product.source_product_id ||
-                          agentLinks.length > 0) && (
-                          <div className="cluster">
-                            {product.source_platform && (
-                              <span className="badge badge-muted">
-                                {product.source_platform}
-                              </span>
-                            )}
-
-                            {product.source_product_id && (
-                              <span className="badge badge-muted">
-                                ID: {product.source_product_id}
-                              </span>
-                            )}
-
-                            {agentLinks.map((agentLink) => (
-                              <a
-                                key={`${product.id}_${agentLink.agent}`}
-                                href={agentLink.url}
-                                className="btn btn-primary btn-small"
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {agentLink.label}
-                              </a>
-                            ))}
+                        {product.source_platform && (
+                          <div className="cluster product-source-cluster">
+                            <span className="badge badge-muted">
+                              {product.source_platform}
+                            </span>
                           </div>
                         )}
 
                         {productImages.length > 0 && (
                           <div className="product-images-panel">
                             <div className="product-images">
-                              {imagesToShow.map((image) => (
+                              {imagesToShow.map((image, imageIndex) => (
                                 <div key={image.id} className="product-image-card">
-                                  <img
-                                    src={getUploadUrl(image.file_path)}
-                                    alt={image.image_label || product.product_name}
-                                  />
+                                  <button
+                                    type="button"
+                                    className="product-image-open-button"
+                                    onClick={() =>
+                                      openImageLightbox(
+                                        productImages,
+                                        imageIndex,
+                                        product.product_name
+                                      )
+                                    }
+                                    aria-label={`Open image ${
+                                      imageIndex + 1
+                                    } of ${product.product_name}`}
+                                  >
+                                    <img
+                                      src={getUploadUrl(image.file_path)}
+                                      alt={image.image_label || product.product_name}
+                                    />
+                                  </button>
 
                                   {image.image_label && (
                                     <p className="image-label">
@@ -304,7 +381,10 @@ function ReviewCard({
                                     <button
                                       type="button"
                                       className="btn btn-danger btn-small image-delete-button"
-                                      onClick={() => onDeleteImage(image.id)}
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        onDeleteImage(image.id);
+                                      }}
                                       disabled={deletingImageId === image.id}
                                     >
                                       {deletingImageId === image.id
@@ -327,6 +407,22 @@ function ReviewCard({
                                   : `See more pictures (+${hiddenImageCount})`}
                               </button>
                             )}
+                          </div>
+                        )}
+
+                        {agentLinks.length > 0 && (
+                          <div className="product-agent-actions">
+                            {agentLinks.map((agentLink) => (
+                              <a
+                                key={`${product.id}_${agentLink.agent}`}
+                                href={agentLink.url}
+                                className="btn btn-primary product-agent-button"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {agentLink.label}
+                              </a>
+                            ))}
                           </div>
                         )}
 
@@ -435,8 +531,76 @@ function ReviewCard({
       </section>
 
       {children && <div className="review-card-actions">{children}</div>}
-      </article>
-    </>
+
+      {lightboxData.isOpen && activeLightboxImage && (
+        <div
+          className="image-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product image preview"
+          onClick={closeImageLightbox}
+        >
+          <button
+            type="button"
+            className="image-lightbox-close"
+            onClick={closeImageLightbox}
+            aria-label="Close image preview"
+          >
+            ×
+          </button>
+
+          <div
+            className="image-lightbox-content"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="image-lightbox-top">
+              <strong>{lightboxData.productName}</strong>
+              <span>
+                {lightboxData.currentIndex + 1} / {lightboxData.images.length}
+              </span>
+            </div>
+
+            {lightboxData.images.length > 1 && (
+              <button
+                type="button"
+                className="image-lightbox-arrow image-lightbox-arrow-left"
+                onClick={showPreviousImage}
+                aria-label="Previous image"
+              >
+                ←
+              </button>
+            )}
+
+            <img
+              className="image-lightbox-image"
+              src={getUploadUrl(activeLightboxImage.file_path)}
+              alt={
+                activeLightboxImage.image_label ||
+                lightboxData.productName ||
+                "Product image"
+              }
+            />
+
+            {lightboxData.images.length > 1 && (
+              <button
+                type="button"
+                className="image-lightbox-arrow image-lightbox-arrow-right"
+                onClick={showNextImage}
+                aria-label="Next image"
+              >
+                →
+              </button>
+            )}
+
+            {activeLightboxImage.image_label && (
+              <p className="image-lightbox-label">
+                {activeLightboxImage.image_label}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </article>
   );
 }
 
