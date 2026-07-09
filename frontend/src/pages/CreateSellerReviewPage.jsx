@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { apiPost } from "../api/api.js";
+import { apiPost, apiUpload } from "../api/api.js";
 
 const PRODUCT_TYPE_OPTIONS = [
   "Shoes",
@@ -14,6 +14,28 @@ const PRODUCT_TYPE_OPTIONS = [
   "Other",
 ];
 
+const MAX_PRODUCTS_PER_REVIEW = 5;
+const MAX_IMAGES_PER_PRODUCT = 6;
+
+function createClientId() {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function createEmptyProduct() {
+  return {
+    clientId: createClientId(),
+    product_name: "",
+    purchase_date: "",
+    short_description: "",
+    product_link: "",
+    images: [],
+  };
+}
+
 function CreateSellerReviewPage() {
   const navigate = useNavigate();
 
@@ -25,12 +47,9 @@ function CreateSellerReviewPage() {
     quality_rating: "5",
     price_rating: "5",
     description: "",
-    product_name: "",
-    purchase_date: "",
-    short_description: "",
-    product_link: "",
   });
 
+  const [products, setProducts] = useState([createEmptyProduct()]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,14 +62,185 @@ function CreateSellerReviewPage() {
     }));
   }
 
+  function handleProductChange(productClientId, event) {
+    const { name, value } = event.target;
+
+    setProducts((previousProducts) =>
+      previousProducts.map((product) =>
+        product.clientId === productClientId
+          ? {
+              ...product,
+              [name]: value,
+            }
+          : product
+      )
+    );
+  }
+
+  function handleAddProduct() {
+    setError("");
+
+    if (products.length >= MAX_PRODUCTS_PER_REVIEW) {
+      setError(`You can add up to ${MAX_PRODUCTS_PER_REVIEW} products.`);
+      return;
+    }
+
+    setProducts((previousProducts) => [
+      ...previousProducts,
+      createEmptyProduct(),
+    ]);
+  }
+
+  function handleRemoveProduct(productClientId) {
+    setError("");
+
+    setProducts((previousProducts) => {
+      if (previousProducts.length === 1) {
+        return previousProducts;
+      }
+
+      return previousProducts.filter(
+        (product) => product.clientId !== productClientId
+      );
+    });
+  }
+
+  function handleProductImagesChange(productClientId, event) {
+    const selectedFiles = Array.from(event.target.files || []);
+
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    setError("");
+
+    setProducts((previousProducts) =>
+      previousProducts.map((product) => {
+        if (product.clientId !== productClientId) {
+          return product;
+        }
+
+        const availableSlots = MAX_IMAGES_PER_PRODUCT - product.images.length;
+        const filesToAdd = selectedFiles.slice(0, availableSlots);
+
+        if (filesToAdd.length < selectedFiles.length) {
+          setError(
+            `Each product can have up to ${MAX_IMAGES_PER_PRODUCT} images. Extra images were ignored.`
+          );
+        }
+
+        const newImages = filesToAdd.map((file) => ({
+          clientId: createClientId(),
+          file,
+          image_label: "",
+        }));
+
+        return {
+          ...product,
+          images: [...product.images, ...newImages],
+        };
+      })
+    );
+
+    event.target.value = "";
+  }
+
+  function handleProductImageLabelChange(productClientId, imageClientId, event) {
+    const { value } = event.target;
+
+    setProducts((previousProducts) =>
+      previousProducts.map((product) => {
+        if (product.clientId !== productClientId) {
+          return product;
+        }
+
+        return {
+          ...product,
+          images: product.images.map((image) =>
+            image.clientId === imageClientId
+              ? {
+                  ...image,
+                  image_label: value,
+                }
+              : image
+          ),
+        };
+      })
+    );
+  }
+
+  function handleRemoveProductImage(productClientId, imageClientId) {
+    setError("");
+
+    setProducts((previousProducts) =>
+      previousProducts.map((product) => {
+        if (product.clientId !== productClientId) {
+          return product;
+        }
+
+        return {
+          ...product,
+          images: product.images.filter(
+            (image) => image.clientId !== imageClientId
+          ),
+        };
+      })
+    );
+  }
+
+  async function uploadImagesForCreatedProducts(createdProducts) {
+    const uploadErrors = [];
+
+    for (let productIndex = 0; productIndex < products.length; productIndex += 1) {
+      const localProduct = products[productIndex];
+      const createdProduct = createdProducts[productIndex];
+
+      if (!createdProduct?.id) {
+        if (localProduct.images.length > 0) {
+          uploadErrors.push(localProduct.product_name || `Product ${productIndex + 1}`);
+        }
+
+        continue;
+      }
+
+      for (const image of localProduct.images) {
+        try {
+          const imageFormData = new FormData();
+
+          if (image.image_label.trim()) {
+            imageFormData.append("image_label", image.image_label.trim());
+          }
+
+          imageFormData.append("file", image.file);
+
+          await apiUpload(
+            `/seller-reviews/products/${createdProduct.id}/images`,
+            imageFormData
+          );
+        } catch {
+          uploadErrors.push(localProduct.product_name || `Product ${productIndex + 1}`);
+        }
+      }
+    }
+
+    return uploadErrors;
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
 
     setError("");
     setIsLoading(true);
 
+    const cleanedProducts = products.map((product) => ({
+      product_name: product.product_name.trim(),
+      purchase_date: product.purchase_date || null,
+      short_description: product.short_description.trim(),
+      product_link: product.product_link.trim() || null,
+    }));
+
     try {
-      await apiPost("/seller-reviews", {
+      const createdReview = await apiPost("/seller-reviews", {
         seller_name: formData.seller_name.trim(),
         seller_link: formData.seller_link.trim(),
         product_type: formData.product_type.trim(),
@@ -58,20 +248,22 @@ function CreateSellerReviewPage() {
         quality_rating: Number(formData.quality_rating),
         price_rating: Number(formData.price_rating),
         description: formData.description.trim(),
-        products: [
-          {
-            product_name: formData.product_name.trim(),
-            purchase_date: formData.purchase_date || null,
-            short_description: formData.short_description.trim(),
-            product_link: formData.product_link.trim() || null,
-          },
-        ],
+        products: cleanedProducts,
       });
 
-      navigate("/seller-reviews");
+      const uploadErrors = await uploadImagesForCreatedProducts(
+        createdReview.products || []
+      );
+
+      if (uploadErrors.length > 0) {
+        window.alert(
+          "Review created, but some images could not be uploaded. You can add them later from My Reviews."
+        );
+      }
+
+      navigate(`/seller-reviews/${createdReview.id}`);
     } catch (error) {
       setError(error.message);
-    } finally {
       setIsLoading(false);
     }
   }
@@ -172,6 +364,13 @@ function CreateSellerReviewPage() {
 
         .create-review-section-header {
           margin-bottom: 0.15rem;
+        }
+
+        .create-review-section-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 1rem;
         }
 
         .create-review-section-header h2 {
@@ -284,6 +483,127 @@ function CreateSellerReviewPage() {
           outline: none;
         }
 
+        .create-product-card {
+          display: grid;
+          gap: 0.95rem;
+          border: 1px solid rgba(45, 38, 30, 0.12);
+          border-radius: 22px;
+          padding: 1rem;
+          background: rgba(255, 250, 242, 0.72);
+        }
+
+        .create-product-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .create-product-card-title {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          color: #1f1c18;
+          font-weight: 950;
+        }
+
+        .create-product-number {
+          width: 28px;
+          height: 28px;
+          display: grid;
+          place-items: center;
+          border-radius: 999px;
+          background: #1f1c18;
+          color: #fffaf2;
+          font-size: 0.82rem;
+          font-weight: 950;
+        }
+
+        .create-product-images-panel {
+          display: grid;
+          gap: 0.8rem;
+          border: 1px dashed rgba(45, 38, 30, 0.2);
+          border-radius: 20px;
+          padding: 0.9rem;
+          background: rgba(255, 255, 255, 0.58);
+        }
+
+        .create-product-images-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+
+        .create-product-images-top strong {
+          display: block;
+          color: #1f1c18;
+          font-size: 0.95rem;
+        }
+
+        .create-product-images-top small {
+          display: block;
+          margin-top: 0.2rem;
+          color: #82786d;
+          font-size: 0.78rem;
+          line-height: 1.4;
+        }
+
+        .create-image-picker {
+          position: relative;
+          overflow: hidden;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 42px;
+          border-radius: 14px;
+          padding: 0.7rem 0.95rem;
+          background: #1f1c18;
+          color: #fffaf2;
+          font-size: 0.86rem;
+          font-weight: 950;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+
+        .create-image-picker input {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          cursor: pointer;
+        }
+
+        .create-selected-images {
+          display: grid;
+          gap: 0.65rem;
+        }
+
+        .create-selected-image-item {
+          display: grid;
+          gap: 0.65rem;
+          border: 1px solid rgba(45, 38, 30, 0.1);
+          border-radius: 18px;
+          padding: 0.75rem;
+          background: rgba(255, 255, 255, 0.8);
+        }
+
+        .create-selected-image-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .create-selected-image-name {
+          min-width: 0;
+          color: #2d271f;
+          font-size: 0.86rem;
+          font-weight: 900;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
         .create-review-side-card {
           border: 1px solid rgba(45, 38, 30, 0.1);
           border-radius: 28px;
@@ -383,6 +703,11 @@ function CreateSellerReviewPage() {
             display: flex;
             flex-wrap: wrap;
           }
+
+          .create-selected-image-item {
+            grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+            align-items: center;
+          }
         }
 
         @media (min-width: 1040px) {
@@ -429,6 +754,16 @@ function CreateSellerReviewPage() {
           .create-review-title {
             font-size: 2.1rem;
           }
+
+          .create-review-section-header-row,
+          .create-product-images-top,
+          .create-product-card-header {
+            display: grid;
+          }
+
+          .create-image-picker {
+            width: 100%;
+          }
         }
       `}</style>
 
@@ -443,8 +778,8 @@ function CreateSellerReviewPage() {
 
           <p className="create-review-subtitle">
             Share your experience with a seller, rate the product quality and
-            price, and add a product link so other members can open it through
-            Kakobuy.
+            price, and add multiple products with images so other members can
+            judge the seller better.
           </p>
         </div>
 
@@ -584,70 +919,201 @@ function CreateSellerReviewPage() {
               </section>
 
               <section className="create-review-section">
-                <div className="create-review-section-header">
-                  <h2>Product details</h2>
-                  <p>Add the product you bought from this seller.</p>
+                <div className="create-review-section-header create-review-section-header-row">
+                  <div>
+                    <h2>Products</h2>
+                    <p>Add up to 5 products and up to 6 images per product.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={handleAddProduct}
+                    disabled={isLoading || products.length >= MAX_PRODUCTS_PER_REVIEW}
+                  >
+                    Add product
+                  </button>
                 </div>
 
-                <div className="create-review-grid">
-                  <div className="create-review-field">
-                    <label htmlFor="product_name">Purchased product</label>
-                    <input
-                      id="product_name"
-                      name="product_name"
-                      type="text"
-                      value={formData.product_name}
-                      onChange={handleChange}
-                      placeholder="Example: Nike TN Black"
-                      required
-                      minLength={2}
-                      maxLength={150}
-                    />
-                  </div>
+                {products.map((product, productIndex) => (
+                  <div key={product.clientId} className="create-product-card">
+                    <div className="create-product-card-header">
+                      <div className="create-product-card-title">
+                        <span className="create-product-number">
+                          {productIndex + 1}
+                        </span>
+                        <span>Product {productIndex + 1}</span>
+                      </div>
 
-                  <div className="create-review-field">
-                    <label htmlFor="purchase_date">Purchase date</label>
-                    <input
-                      id="purchase_date"
-                      name="purchase_date"
-                      type="date"
-                      value={formData.purchase_date}
-                      onChange={handleChange}
-                    />
-                  </div>
+                      {products.length > 1 && (
+                        <button
+                          type="button"
+                          className="button button-danger"
+                          onClick={() => handleRemoveProduct(product.clientId)}
+                          disabled={isLoading}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
 
-                  <div className="create-review-field full">
-                    <label htmlFor="product_link">Product link</label>
-                    <input
-                      id="product_link"
-                      name="product_link"
-                      type="url"
-                      value={formData.product_link}
-                      onChange={handleChange}
-                      placeholder="Weidian, Taobao, Tmall, 1688 or agent product link"
-                      maxLength={2000}
-                    />
-                    <small>
-                      Supported links are converted into Kakobuy buttons after
-                      the review is created.
-                    </small>
-                  </div>
+                    <div className="create-review-grid">
+                      <div className="create-review-field">
+                        <label htmlFor={`product_name_${product.clientId}`}>
+                          Purchased product
+                        </label>
+                        <input
+                          id={`product_name_${product.clientId}`}
+                          name="product_name"
+                          type="text"
+                          value={product.product_name}
+                          onChange={(event) =>
+                            handleProductChange(product.clientId, event)
+                          }
+                          placeholder="Example: Nike TN Black"
+                          required
+                          minLength={2}
+                          maxLength={150}
+                        />
+                      </div>
 
-                  <div className="create-review-field full">
-                    <label htmlFor="short_description">
-                      Product description
-                    </label>
-                    <textarea
-                      id="short_description"
-                      name="short_description"
-                      value={formData.short_description}
-                      onChange={handleChange}
-                      placeholder="Short info about the specific product you bought..."
-                      rows="3"
-                      maxLength={500}
-                    />
+                      <div className="create-review-field">
+                        <label htmlFor={`purchase_date_${product.clientId}`}>
+                          Purchase date
+                        </label>
+                        <input
+                          id={`purchase_date_${product.clientId}`}
+                          name="purchase_date"
+                          type="date"
+                          value={product.purchase_date}
+                          onChange={(event) =>
+                            handleProductChange(product.clientId, event)
+                          }
+                        />
+                      </div>
+
+                      <div className="create-review-field full">
+                        <label htmlFor={`product_link_${product.clientId}`}>
+                          Product link
+                        </label>
+                        <input
+                          id={`product_link_${product.clientId}`}
+                          name="product_link"
+                          type="url"
+                          value={product.product_link}
+                          onChange={(event) =>
+                            handleProductChange(product.clientId, event)
+                          }
+                          placeholder="Weidian, Taobao, Tmall, 1688 or agent product link"
+                          maxLength={2000}
+                        />
+                        <small>
+                          Supported links are converted into agent buttons after
+                          the review is created.
+                        </small>
+                      </div>
+
+                      <div className="create-review-field full">
+                        <label htmlFor={`short_description_${product.clientId}`}>
+                          Product description
+                        </label>
+                        <textarea
+                          id={`short_description_${product.clientId}`}
+                          name="short_description"
+                          value={product.short_description}
+                          onChange={(event) =>
+                            handleProductChange(product.clientId, event)
+                          }
+                          placeholder="Short info about the specific product you bought..."
+                          rows="3"
+                          maxLength={500}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="create-product-images-panel">
+                      <div className="create-product-images-top">
+                        <div>
+                          <strong>Product images</strong>
+                          <small>
+                            Add real product, QC, box or detail pictures.
+                          </small>
+                        </div>
+
+                        <label className="create-image-picker">
+                          Add images
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            multiple
+                            onChange={(event) =>
+                              handleProductImagesChange(product.clientId, event)
+                            }
+                            disabled={
+                              isLoading ||
+                              product.images.length >= MAX_IMAGES_PER_PRODUCT
+                            }
+                          />
+                        </label>
+                      </div>
+
+                      {product.images.length === 0 ? (
+                        <p className="empty-state">No images selected.</p>
+                      ) : (
+                        <div className="create-selected-images">
+                          {product.images.map((image) => (
+                            <div
+                              key={image.clientId}
+                              className="create-selected-image-item"
+                            >
+                              <div className="create-selected-image-meta">
+                                <span className="create-selected-image-name">
+                                  {image.file.name}
+                                </span>
+
+                                <button
+                                  type="button"
+                                  className="button button-danger"
+                                  onClick={() =>
+                                    handleRemoveProductImage(
+                                      product.clientId,
+                                      image.clientId
+                                    )
+                                  }
+                                  disabled={isLoading}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+
+                              <div className="create-review-field">
+                                <label
+                                  htmlFor={`image_label_${product.clientId}_${image.clientId}`}
+                                >
+                                  Image label
+                                </label>
+                                <input
+                                  id={`image_label_${product.clientId}_${image.clientId}`}
+                                  type="text"
+                                  value={image.image_label}
+                                  onChange={(event) =>
+                                    handleProductImageLabelChange(
+                                      product.clientId,
+                                      image.clientId,
+                                      event
+                                    )
+                                  }
+                                  placeholder="Example: front, box, detail"
+                                  maxLength={100}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                ))}
               </section>
 
               <section className="create-review-section">
@@ -676,7 +1142,7 @@ function CreateSellerReviewPage() {
                   className="button button-primary"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Creating..." : "Create review"}
+                  {isLoading ? "Creating and uploading..." : "Create review"}
                 </button>
 
                 <button
@@ -702,19 +1168,19 @@ function CreateSellerReviewPage() {
 
               <div className="create-review-check-item">
                 <span className="create-review-check-icon">2</span>
-                <span>Add the original product link when possible.</span>
+                <span>Add multiple products if you bought more than one item.</span>
               </div>
 
               <div className="create-review-check-item">
                 <span className="create-review-check-icon">3</span>
-                <span>Keep the review honest and useful for buyers.</span>
+                <span>Add images for every product when possible.</span>
               </div>
             </div>
 
             <div className="create-review-link-note">
-              <strong>Kakobuy ready</strong>
-              Product links from Weidian, Taobao, Tmall, 1688 and agent pages
-              can be opened with Kakobuy after publishing.
+              <strong>Image upload ready</strong>
+              The review is created first. After that, your selected images are
+              uploaded automatically to the right product.
             </div>
           </aside>
         </div>

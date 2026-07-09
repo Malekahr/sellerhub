@@ -2,33 +2,191 @@ import { useEffect, useState } from "react";
 
 import { getUploadUrl } from "../api/api.js";
 
-const KAKOBUY_AFFILIATE_CODE = "szyje";
+const HIPOBUY_INVITE_CODE = "BLEV0NY1R";
+const HIPOBUY_REGISTER_URL = `https://hipobuy.com/register?inviteCode=${encodeURIComponent(
+  HIPOBUY_INVITE_CODE
+)}`;
 
-function buildKakobuySellerAffiliateUrl(originalUrl) {
+function normalizePlatform(platform) {
+  const cleanedPlatform = String(platform || "").trim().toLowerCase();
+
+  if (cleanedPlatform.includes("weidian") || cleanedPlatform.includes("wedian")) {
+    return "weidian";
+  }
+
+  if (cleanedPlatform.includes("taobao") || cleanedPlatform.includes("tmall")) {
+    return "taobao";
+  }
+
+  if (cleanedPlatform.includes("1688")) {
+    return "1688";
+  }
+
+  return "";
+}
+
+function buildHipobuyFallbackUrl(originalUrl) {
   const cleanedUrl = String(originalUrl || "").trim();
 
   if (!cleanedUrl) {
-    return "#";
+    return HIPOBUY_REGISTER_URL;
+  }
+
+  return `https://hipobuy.com/?inviteCode=${encodeURIComponent(
+    HIPOBUY_INVITE_CODE
+  )}&url=${encodeURIComponent(cleanedUrl)}`;
+}
+
+function buildHipobuyProductUrl(platform, productId) {
+  const normalizedPlatform = normalizePlatform(platform);
+  const cleanedProductId = String(productId || "").trim();
+
+  if (!normalizedPlatform || !cleanedProductId) {
+    return HIPOBUY_REGISTER_URL;
+  }
+
+  return `https://hipobuy.com/product/${encodeURIComponent(
+    normalizedPlatform
+  )}/${encodeURIComponent(cleanedProductId)}?inviteCode=${encodeURIComponent(
+    HIPOBUY_INVITE_CODE
+  )}`;
+}
+
+function extractMarketplaceDataFromUrl(originalUrl) {
+  const cleanedUrl = String(originalUrl || "").trim();
+
+  if (!cleanedUrl) {
+    return null;
   }
 
   try {
     const parsedUrl = new URL(cleanedUrl);
     const hostname = parsedUrl.hostname.toLowerCase();
+    const pathname = parsedUrl.pathname.toLowerCase();
 
-    if (hostname.includes("kakobuy.com") || hostname.includes("ikako.vip")) {
-      if (!parsedUrl.searchParams.has("affcode")) {
-        parsedUrl.searchParams.set("affcode", KAKOBUY_AFFILIATE_CODE);
+    if (hostname.includes("hipobuy.com")) {
+      if (!parsedUrl.searchParams.has("inviteCode")) {
+        parsedUrl.searchParams.set("inviteCode", HIPOBUY_INVITE_CODE);
       }
 
-      return parsedUrl.toString();
+      return {
+        directUrl: parsedUrl.toString(),
+      };
+    }
+
+    if (hostname.includes("weidian.com")) {
+      const itemId =
+        parsedUrl.searchParams.get("itemID") ||
+        parsedUrl.searchParams.get("itemId") ||
+        parsedUrl.searchParams.get("item_id") ||
+        parsedUrl.searchParams.get("id");
+
+      if (itemId) {
+        return {
+          platform: "weidian",
+          productId: itemId,
+        };
+      }
+
+      return {
+        fallbackUrl: buildHipobuyFallbackUrl(cleanedUrl),
+      };
+    }
+
+    if (hostname.includes("taobao.com") || hostname.includes("tmall.com")) {
+      const itemId =
+        parsedUrl.searchParams.get("id") ||
+        parsedUrl.searchParams.get("itemID") ||
+        parsedUrl.searchParams.get("itemId") ||
+        parsedUrl.searchParams.get("item_id");
+
+      if (itemId) {
+        return {
+          platform: "taobao",
+          productId: itemId,
+        };
+      }
+
+      return {
+        fallbackUrl: buildHipobuyFallbackUrl(cleanedUrl),
+      };
+    }
+
+    if (hostname.includes("1688.com")) {
+      const offerMatch = pathname.match(/\/offer\/(\d+)\.html/);
+
+      if (offerMatch?.[1]) {
+        return {
+          platform: "1688",
+          productId: offerMatch[1],
+        };
+      }
+
+      return {
+        fallbackUrl: buildHipobuyFallbackUrl(cleanedUrl),
+      };
     }
   } catch {
-    return cleanedUrl;
+    return {
+      fallbackUrl: buildHipobuyFallbackUrl(cleanedUrl),
+    };
   }
 
-  return `https://www.kakobuy.com/item/store?url=${encodeURIComponent(
-    cleanedUrl
-  )}&affcode=${encodeURIComponent(KAKOBUY_AFFILIATE_CODE)}`;
+  return {
+    fallbackUrl: buildHipobuyFallbackUrl(cleanedUrl),
+  };
+}
+
+function buildHipobuyUrlFromOriginalUrl(originalUrl) {
+  const marketplaceData = extractMarketplaceDataFromUrl(originalUrl);
+
+  if (!marketplaceData) {
+    return HIPOBUY_REGISTER_URL;
+  }
+
+  if (marketplaceData.directUrl) {
+    return marketplaceData.directUrl;
+  }
+
+  if (marketplaceData.productId && marketplaceData.platform) {
+    return buildHipobuyProductUrl(
+      marketplaceData.platform,
+      marketplaceData.productId
+    );
+  }
+
+  if (marketplaceData.fallbackUrl) {
+    return marketplaceData.fallbackUrl;
+  }
+
+  return HIPOBUY_REGISTER_URL;
+}
+
+function buildSellerHipobuyUrl(originalUrl) {
+  return buildHipobuyUrlFromOriginalUrl(originalUrl);
+}
+
+function buildProductHipobuyUrl(product) {
+  const platform = normalizePlatform(product.source_platform);
+  const productId =
+    product.source_product_id ||
+    product.sourceProductId ||
+    product.product_id ||
+    product.marketplace_product_id ||
+    "";
+
+  if (platform && productId) {
+    return buildHipobuyProductUrl(platform, productId);
+  }
+
+  const productUrl =
+    product.product_link ||
+    product.original_product_link ||
+    product.original_url ||
+    product.url ||
+    "";
+
+  return buildHipobuyUrlFromOriginalUrl(productUrl);
 }
 
 function RatingStars({ label, value }) {
@@ -199,12 +357,12 @@ function ReviewCard({
 
           {review.seller_link && (
             <a
-              href={buildKakobuySellerAffiliateUrl(review.seller_link)}
+              href={buildSellerHipobuyUrl(review.seller_link)}
               className="btn btn-primary btn-full"
               target="_blank"
               rel="noreferrer"
             >
-              Open seller
+              Open seller with Hipobuy
             </a>
           )}
         </div>
@@ -224,7 +382,6 @@ function ReviewCard({
           <div className="product-list">
             {products.map((product) => {
               const productImages = product.images || [];
-              const agentLinks = product.agent_links || [];
               const imagePreviewLimit = 3;
               const imagesAreExpanded = Boolean(
                 expandedImagesByProductId[product.id]
@@ -235,6 +392,7 @@ function ReviewCard({
                 : productImages.slice(0, imagePreviewLimit);
 
               const hiddenImageCount = productImages.length - imagePreviewLimit;
+              const hipobuyProductUrl = buildProductHipobuyUrl(product);
 
               return (
                 <div key={product.id} className="product-item">
@@ -410,21 +568,16 @@ function ReviewCard({
                           </div>
                         )}
 
-                        {agentLinks.length > 0 && (
-                          <div className="product-agent-actions">
-                            {agentLinks.map((agentLink) => (
-                              <a
-                                key={`${product.id}_${agentLink.agent}`}
-                                href={agentLink.url}
-                                className="btn btn-primary product-agent-button"
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {agentLink.label}
-                              </a>
-                            ))}
-                          </div>
-                        )}
+                        <div className="product-agent-actions">
+                          <a
+                            href={hipobuyProductUrl}
+                            className="btn btn-primary product-agent-button"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open with Hipobuy
+                          </a>
+                        </div>
 
                         {activeImageProductId === product.id && (
                           <form
