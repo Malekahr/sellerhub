@@ -14,8 +14,8 @@ function Navbar() {
   return (
     <>
       <header className="mobile-topbar">
-        <Link to="/seller-reviews" className="brand">
-          <span className="brand-mark">S</span>
+        <Link to="/seller-reviews" className="brand" aria-label="SellerHub home">
+          <img src="/sellerhub-icon.png" alt="" style={styles.brandLogo} />
           <span>SellerHub</span>
         </Link>
 
@@ -31,8 +31,12 @@ function Navbar() {
       </header>
 
       <aside className="sidebar">
-        <Link to="/seller-reviews" className="brand sidebar-brand">
-          <span className="brand-mark">S</span>
+        <Link
+          to="/seller-reviews"
+          className="brand sidebar-brand"
+          aria-label="SellerHub home"
+        >
+          <img src="/sellerhub-icon.png" alt="" style={styles.brandLogo} />
           <span>SellerHub</span>
         </Link>
 
@@ -145,6 +149,14 @@ function Navbar() {
 }
 
 const styles = {
+  brandLogo: {
+    width: "2.35rem",
+    height: "2.35rem",
+    borderRadius: "999px",
+    objectFit: "cover",
+    flex: "0 0 auto",
+  },
+
   navItemWithBadge: {
     width: "100%",
     display: "flex",

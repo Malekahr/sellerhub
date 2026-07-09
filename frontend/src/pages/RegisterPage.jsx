@@ -58,73 +58,377 @@ function RegisterPage() {
   }
 
   return (
-    <section className="auth-page">
-      <div className="card auth-card">
-        <h1>Create account</h1>
-        <p className="muted-text">
-          Create an account to view seller reviews, join groups, and share your own experiences.
-        </p>
+    <>
+      <style>{`
+        .seller-auth-page {
+          min-height: calc(100dvh - 120px);
+          display: grid;
+          align-items: center;
+          padding: 1rem 0 5.5rem;
+        }
 
-        {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        .seller-auth-shell {
+          width: min(1120px, 100%);
+          margin: 0 auto;
+          display: grid;
+          gap: 1rem;
+        }
 
-        <form onSubmit={handleSubmit} className="form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Example: malek123"
-              required
-              minLength={3}
-              maxLength={50}
-            />
+        .seller-auth-intro {
+          position: relative;
+          overflow: hidden;
+          border: 1px solid rgba(23, 27, 32, 0.09);
+          border-radius: 30px;
+          padding: 1.15rem;
+          background:
+            radial-gradient(circle at top right, rgba(79, 70, 229, 0.09), transparent 34%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 246, 241, 0.9));
+          box-shadow: 0 14px 38px rgba(15, 23, 32, 0.08);
+        }
+
+        .seller-auth-eyebrow {
+          width: fit-content;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          border: 1px solid rgba(23, 27, 32, 0.1);
+          border-radius: 999px;
+          padding: 0.48rem 0.7rem;
+          background: rgba(255, 255, 255, 0.75);
+          color: #4f5863;
+          font-size: 0.72rem;
+          font-weight: 950;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .seller-auth-eyebrow-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: #18212b;
+        }
+
+        .seller-auth-title {
+          max-width: 680px;
+          margin: 1rem 0 0;
+          color: #171b20;
+          font-size: clamp(2.35rem, 8vw, 5rem);
+          line-height: 0.92;
+          letter-spacing: -0.075em;
+        }
+
+        .seller-auth-subtitle {
+          max-width: 640px;
+          margin: 1rem 0 0;
+          color: #4f5863;
+          font-size: 1rem;
+          line-height: 1.65;
+        }
+
+        .seller-auth-feature-list {
+          display: grid;
+          gap: 0.7rem;
+          margin-top: 1.15rem;
+        }
+
+        .seller-auth-feature {
+          display: grid;
+          grid-template-columns: 34px minmax(0, 1fr);
+          gap: 0.75rem;
+          align-items: start;
+          border: 1px solid rgba(23, 27, 32, 0.08);
+          border-radius: 18px;
+          padding: 0.75rem;
+          background: rgba(255, 255, 255, 0.75);
+          box-shadow: 0 8px 20px rgba(15, 23, 32, 0.045);
+        }
+
+        .seller-auth-feature-number {
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #171b20 0%, #2b3440 100%);
+          color: #ffffff;
+          font-size: 0.82rem;
+          font-weight: 950;
+        }
+
+        .seller-auth-feature strong {
+          display: block;
+          color: #171b20;
+          font-size: 0.94rem;
+          font-weight: 950;
+        }
+
+        .seller-auth-feature span {
+          display: block;
+          margin-top: 0.18rem;
+          color: #8b8176;
+          font-size: 0.8rem;
+          font-weight: 800;
+          line-height: 1.35;
+        }
+
+        .seller-auth-card {
+          border: 1px solid rgba(23, 27, 32, 0.09);
+          border-radius: 30px;
+          padding: 1rem;
+          background: rgba(255, 255, 255, 0.92);
+          box-shadow: 0 18px 48px rgba(15, 23, 32, 0.1);
+        }
+
+        .seller-auth-card-header {
+          display: grid;
+          gap: 0.45rem;
+          margin-bottom: 1rem;
+        }
+
+        .seller-auth-card-header h1 {
+          margin: 0;
+          color: #171b20;
+          font-size: clamp(1.9rem, 7vw, 2.8rem);
+          line-height: 0.95;
+          letter-spacing: -0.065em;
+        }
+
+        .seller-auth-card-header p {
+          margin: 0;
+          color: #4f5863;
+          line-height: 1.55;
+          font-size: 0.95rem;
+        }
+
+        .seller-auth-form {
+          display: grid;
+          gap: 0.9rem;
+        }
+
+        .seller-auth-field {
+          display: grid;
+          gap: 0.42rem;
+        }
+
+        .seller-auth-field label {
+          color: #252a31;
+          font-size: 0.88rem;
+          font-weight: 950;
+        }
+
+        .seller-auth-field input {
+          width: 100%;
+          min-height: 52px;
+          border: 1px solid rgba(23, 27, 32, 0.12);
+          border-radius: 17px;
+          padding: 0 1rem;
+          background: #ffffff;
+          color: #171b20;
+          font: inherit;
+          font-weight: 800;
+          outline: none;
+        }
+
+        .seller-auth-field input:focus {
+          border-color: rgba(79, 70, 229, 0.45);
+          box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+        }
+
+        .seller-auth-submit {
+          width: 100%;
+          min-height: 52px;
+          margin-top: 0.2rem;
+          border-radius: 17px;
+        }
+
+        .seller-auth-switch {
+          margin: 1rem 0 0;
+          border-top: 1px solid rgba(23, 27, 32, 0.08);
+          padding-top: 1rem;
+          color: #4f5863;
+          font-size: 0.92rem;
+          font-weight: 800;
+          text-align: center;
+        }
+
+        .seller-auth-switch a {
+          color: #4f46e5;
+          font-weight: 950;
+          text-decoration: none;
+        }
+
+        .seller-auth-switch a:hover {
+          text-decoration: underline;
+        }
+
+        @media (min-width: 900px) {
+          .seller-auth-page {
+            padding-bottom: 2rem;
+          }
+
+          .seller-auth-shell {
+            grid-template-columns: minmax(0, 1.05fr) 430px;
+            align-items: stretch;
+          }
+
+          .seller-auth-intro,
+          .seller-auth-card {
+            padding: 1.35rem;
+          }
+
+          .seller-auth-intro {
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+
+          .seller-auth-feature-list {
+            max-width: 620px;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .seller-auth-page {
+            padding-top: 0.25rem;
+          }
+
+          .seller-auth-intro {
+            border-radius: 22px;
+            padding: 0.9rem;
+          }
+
+          .seller-auth-card {
+            border-radius: 22px;
+            padding: 0.9rem;
+          }
+
+          .seller-auth-title {
+            font-size: 2.25rem;
+          }
+
+          .seller-auth-subtitle {
+            font-size: 0.92rem;
+            line-height: 1.45;
+          }
+        }
+      `}</style>
+
+      <section className="seller-auth-page">
+        <div className="seller-auth-shell">
+          <div className="seller-auth-intro">
+            <div>
+              <div className="seller-auth-eyebrow">
+                <span className="seller-auth-eyebrow-dot"></span>
+                SellerHub
+              </div>
+
+              <h1 className="seller-auth-title">
+                Build better seller reviews.
+              </h1>
+
+              <p className="seller-auth-subtitle">
+                Create reviews, add multiple products, upload product images and
+                help the community find reliable sellers faster.
+              </p>
+            </div>
+
+            <div className="seller-auth-feature-list">
+              <div className="seller-auth-feature">
+                <div className="seller-auth-feature-number">1</div>
+                <div>
+                  <strong>Review trusted sellers</strong>
+                  <span>Add category, ratings, notes and seller specialties.</span>
+                </div>
+              </div>
+
+              <div className="seller-auth-feature">
+                <div className="seller-auth-feature-number">2</div>
+                <div>
+                  <strong>Add products and images</strong>
+                  <span>Keep product links, QC pictures and details together.</span>
+                </div>
+              </div>
+
+              <div className="seller-auth-feature">
+                <div className="seller-auth-feature-number">3</div>
+                <div>
+                  <strong>Search like a directory</strong>
+                  <span>Filter sellers by category, quality, price and products.</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-            />
+          <div className="seller-auth-card">
+            <div className="seller-auth-card-header">
+              <h1>Create account</h1>
+              <p>Join SellerHub and start building your seller profile.</p>
+            </div>
+
+            {error && <div className="alert alert-error">{error}</div>}
+            {success && <div className="alert alert-success">{success}</div>}
+
+            <form onSubmit={handleSubmit} className="seller-auth-form">
+              <div className="seller-auth-field">
+                <label htmlFor="username">Username</label>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="Example: malek123"
+                  required
+                  minLength={3}
+                  maxLength={50}
+                />
+              </div>
+
+              <div className="seller-auth-field">
+                <label htmlFor="email">Email address</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+
+              <div className="seller-auth-field">
+                <label htmlFor="password">Password</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="At least 8 characters"
+                  required
+                  minLength={8}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="button button-primary seller-auth-submit"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating account..." : "Create account"}
+              </button>
+            </form>
+
+            <p className="seller-auth-switch">
+              Already have an account? <Link to="/login">Log in here</Link>
+            </p>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="At least 8 characters"
-              required
-              minLength={8}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="button button-primary"
-            disabled={isLoading}
-          >
-            {isLoading ? "Creating account..." : "Create account"}
-          </button>
-        </form>
-
-        <p className="auth-switch-text">
-          Already have an account? <Link to="/login">Log in here</Link>
-        </p>
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   );
 }
 
