@@ -525,16 +525,95 @@ function SellerReviewsPage() {
         }
 
         @media (max-width: 720px) {
+          .seller-directory-page {
+            gap: 0.75rem;
+          }
+
+          .seller-directory-hero {
+            border-radius: 22px;
+            padding: 0.85rem;
+          }
+
           .seller-directory-hero-actions .button {
             width: 100%;
+            min-height: 42px;
+          }
+
+          .seller-directory-title {
+            font-size: clamp(1.9rem, 9vw, 2.8rem);
+          }
+
+          .seller-directory-subtitle {
+            font-size: 0.92rem;
+            line-height: 1.45;
           }
 
           .seller-directory-stats {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.45rem;
+          }
+
+          .seller-directory-stat {
+            min-height: 74px;
+            border-radius: 16px;
+            padding: 0.65rem 0.55rem;
+          }
+
+          .seller-directory-stat strong {
+            font-size: 1.15rem;
+          }
+
+          .seller-directory-stat span {
+            margin-top: 0.12rem;
+            font-size: 0.66rem;
+            line-height: 1.15;
+          }
+
+          .seller-directory-toolbar {
+            gap: 0.6rem;
+            border-radius: 20px;
+            padding: 0.65rem;
+          }
+
+          .seller-directory-search input {
+            min-height: 42px;
+            border-radius: 14px;
+            padding: 0 0.85rem;
+            font-size: 0.9rem;
+          }
+
+          .seller-directory-filter-grid {
+            display: flex;
+            gap: 0.55rem;
+            overflow-x: auto;
+            padding-bottom: 0.15rem;
+            scrollbar-width: none;
+          }
+
+          .seller-directory-filter-grid::-webkit-scrollbar {
+            display: none;
+          }
+
+          .seller-directory-filter {
+            min-width: 148px;
+            gap: 0.25rem;
+          }
+
+          .seller-directory-filter label {
+            font-size: 0.62rem;
+            letter-spacing: 0.06em;
+          }
+
+          .seller-directory-filter select {
+            min-height: 40px;
+            border-radius: 14px;
+            padding: 0 0.65rem;
+            font-size: 0.82rem;
           }
 
           .seller-directory-results-top {
             display: grid;
+            gap: 0.2rem;
           }
 
           .seller-directory-metrics {
@@ -547,6 +626,28 @@ function SellerReviewsPage() {
           .seller-directory-toolbar,
           .seller-directory-row {
             border-radius: 22px;
+          }
+
+          .seller-directory-eyebrow {
+            padding: 0.38rem 0.58rem;
+            font-size: 0.64rem;
+          }
+
+          .seller-directory-stats {
+            gap: 0.38rem;
+          }
+
+          .seller-directory-stat {
+            min-height: 68px;
+            padding: 0.58rem 0.45rem;
+          }
+
+          .seller-directory-stat strong {
+            font-size: 1.05rem;
+          }
+
+          .seller-directory-stat span {
+            font-size: 0.62rem;
           }
 
           .seller-directory-row-main {
@@ -624,7 +725,7 @@ function SellerReviewsPage() {
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search sellers, brands, styles or products..."
+              placeholder="Search sellers, brands or products"
             />
           </div>
 
